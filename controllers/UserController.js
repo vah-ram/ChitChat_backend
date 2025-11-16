@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { User } from "../models/UserModel.js";
-import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken"
 
 const router = express.Router();
 
@@ -55,9 +55,16 @@ router.post("/login", async( req, res  ) => {
 
         if(isPasswordValid) {
 
+            const token = jwt.sign(
+                { userId: user._id },
+                process.env.TOKEN_SECRET_KEY,
+                { expiresIn: "7d" }
+            );
+
             return res.json({ 
                 status: true,
-                user
+                user,
+                token
             });
 
         } else {
@@ -70,6 +77,31 @@ router.post("/login", async( req, res  ) => {
     } catch(err) {
         console.error(err);
     }
+});
+
+router.get("/get-profile", async(req,res) => {
+    const token = req.query.token;
+
+    if(!token) return res.json({ status: false });
+
+    try {
+        
+        const decoded = jwt.verify(
+            token, 
+            process.env.TOKEN_SECRET_KEY
+        );
+
+        const user = await User.findById(decoded.userId);
+
+        if(!user) {
+            return res.json({ status: false });
+        };
+
+        res.json({ status: true, user });
+ 
+    } catch(err) {
+        console.error(err);
+    };
 });
 
 router.get('/search-user', async( req, res ) => {
