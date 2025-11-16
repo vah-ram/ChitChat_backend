@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { User } from "../models/UserModel.js";
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 
@@ -8,7 +9,6 @@ router.post("/register", async( req, res ) => {
     const { username, email, password } = req.body;
 
     try {
-
         const hasUsername = await User.findOne({ username });
             if(hasUsername) {
                 return res.json({ 
